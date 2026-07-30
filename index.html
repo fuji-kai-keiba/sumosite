@@ -54,10 +54,11 @@
       </section>
     </main>
     <script>
-      const stage=document.getElementById('stage'),video=document.getElementById('sumoVideo'),bar=document.getElementById('progressBar'),time=document.getElementById('time'),sound=document.getElementById('soundButton'),reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');let duration=0,ticking=false;
+      const stage=document.getElementById('stage'),video=document.getElementById('sumoVideo'),bar=document.getElementById('progressBar'),time=document.getElementById('time'),sound=document.getElementById('soundButton'),reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');let duration=0,ticking=false,scrollStopTimer;
       const formatTime=s=>`${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toFixed(1).padStart(4,'0')}`;
       function syncVideo(){ticking=false;if(!duration||reducedMotion.matches)return;const rect=stage.getBoundingClientRect(),range=stage.offsetHeight-window.innerHeight,progress=Math.min(1,Math.max(0,-rect.top/range)),target=progress*Math.max(0,duration-.04);if(Math.abs(video.currentTime-target)>.018)video.currentTime=target;bar.style.width=`${progress*100}%`;time.textContent=formatTime(target)}
-      function requestSync(){if(!ticking){ticking=true;requestAnimationFrame(syncVideo)}} video.addEventListener('loadedmetadata',()=>{duration=video.duration;syncVideo()});window.addEventListener('scroll',requestSync,{passive:true});window.addEventListener('resize',requestSync);
+      function nudgePlayback(){if(reducedMotion.matches||!duration)return;clearTimeout(scrollStopTimer);video.play().catch(()=>{});scrollStopTimer=setTimeout(()=>video.pause(),180)}
+      function requestSync(){if(!ticking){ticking=true;requestAnimationFrame(syncVideo)}nudgePlayback()} video.addEventListener('loadedmetadata',()=>{duration=video.duration;syncVideo()});window.addEventListener('scroll',requestSync,{passive:true});window.addEventListener('resize',requestSync);
       sound.addEventListener('click',()=>{video.muted=!video.muted;sound.textContent=video.muted?'SOUND OFF':'SOUND ON';sound.setAttribute('aria-pressed',String(!video.muted))});reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)video.pause();else requestSync()});if(reducedMotion.matches)video.setAttribute('controls','');else requestSync();
     </script>
   </body>
