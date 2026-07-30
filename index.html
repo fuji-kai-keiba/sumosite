@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171512" />
+    <title>SUMO — Scroll the Ring</title>
+    <style>
+      :root { --ink:#171512; --paper:#e8e1d2; --chalk:#f7f2e8; --vermilion:#b7382c; --smoke:#81796d; --line:rgba(23,21,18,.24); }
+      * { box-sizing:border-box; } html { background:var(--ink); scroll-behavior:smooth; }
+      body { margin:0; color:var(--chalk); background:var(--ink); font-family:"Hiragino Sans","Yu Gothic",sans-serif; -webkit-font-smoothing:antialiased; }
+      .scroll-stage { height:650vh; position:relative; }
+      .hero { position:sticky; top:0; height:100svh; overflow:hidden; background:var(--ink); }
+      .hero::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg,rgba(23,21,18,.86) 0%,rgba(23,21,18,.64) 31%,rgba(23,21,18,.08) 59%,rgba(23,21,18,.1) 100%),linear-gradient(0deg,rgba(23,21,18,.64),transparent 42%); }
+      video { width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.76) contrast(1.08); }
+      .grain { position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.1; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); mix-blend-mode:screen; }
+      .topline,.meta,.title,.instruction,.sound,.hero-note { position:absolute; z-index:2; }
+      .topline { top:clamp(20px,3vw,44px); left:clamp(20px,4vw,64px); font:11px ui-monospace,SFMono-Regular,monospace; letter-spacing:.13em; }
+      .mark,.instruction b { color:var(--vermilion); font-weight:normal; } .mark { margin-right:.5em; }
+      .sound { top:clamp(18px,3vw,42px); right:clamp(20px,4vw,64px); color:var(--chalk); background:transparent; border:1px solid rgba(247,242,232,.6); padding:.62em .85em; font:11px ui-monospace,monospace; letter-spacing:.08em; cursor:pointer; }
+      .sound:hover,.sound:focus-visible { color:var(--ink); background:var(--chalk); outline:none; }
+      .title { left:clamp(20px,5vw,76px); top:clamp(118px,20vh,210px); max-width:42vw; margin:0; font-family:"Zen Old Mincho","Hiragino Mincho ProN",serif; font-size:clamp(62px,10vw,164px); line-height:.8; letter-spacing:-.09em; font-weight:500; }
+      .title span { display:block; } .title em { color:var(--vermilion); font-style:normal; padding-left:.06em; }
+      .hero-note { left:clamp(20px,5vw,76px); top:calc(clamp(118px,20vh,210px) + clamp(130px,16vw,230px)); width:min(255px,35vw); color:rgba(247,242,232,.77); font-size:12px; line-height:1.8; }
+      .instruction { bottom:clamp(27px,5vw,70px); left:clamp(20px,4vw,64px); font:clamp(10px,1vw,13px) ui-monospace,monospace; letter-spacing:.11em; }
+      .meta { bottom:clamp(27px,5vw,70px); right:clamp(20px,4vw,64px); font:11px ui-monospace,monospace; letter-spacing:.08em; text-align:right; }
+      .progress { position:absolute; z-index:3; bottom:0; left:0; width:100%; height:5px; background:rgba(247,242,232,.22); }.progress span { display:block; width:0;height:100%; background:var(--vermilion); }
+      .content { background:var(--paper); color:var(--ink); padding:clamp(82px,12vw,160px) clamp(20px,7vw,112px) 0; }
+      .eyebrow { margin:0 0 18px; color:var(--vermilion); font:11px ui-monospace,monospace; letter-spacing:.13em; }
+      .intro { display:grid; grid-template-columns:1.1fr .9fr; gap:clamp(36px,9vw,150px); align-items:end; padding-bottom:clamp(88px,12vw,160px); }
+      h2 { margin:0; font-family:"Zen Old Mincho","Hiragino Mincho ProN",serif; font-size:clamp(48px,7vw,108px); line-height:.95; letter-spacing:-.055em; font-weight:500; } .intro p { margin:0; max-width:34em; font-size:16px; line-height:2; }
+      .facts { border-top:1px solid var(--ink); }.fact { display:grid; grid-template-columns:clamp(76px,15vw,220px) 1fr; gap:24px; padding:clamp(28px,4vw,54px) 0; border-bottom:1px solid var(--line); }.fact h3 { margin:0; font:11px ui-monospace,monospace; color:var(--vermilion); letter-spacing:.1em; }.fact p { margin:0; max-width:58em; font-size:clamp(16px,1.4vw,20px); line-height:1.9; }
+      .bout { margin:clamp(88px,13vw,190px) calc(clamp(20px,7vw,112px) * -1) 0; padding:clamp(82px,11vw,150px) clamp(20px,7vw,112px); background:var(--ink); color:var(--chalk); }.bout-head { display:grid; grid-template-columns:1fr auto; gap:20px; align-items:end; border-bottom:1px solid rgba(247,242,232,.35); padding-bottom:28px; }.bout-head p { margin:0; color:var(--vermilion); font:11px ui-monospace,monospace; letter-spacing:.12em; }
+      .flow { list-style:none; padding:0; margin:0; }.flow li { display:grid; grid-template-columns:clamp(54px,9vw,130px) 1fr; padding:clamp(24px,3vw,42px) 0; border-bottom:1px solid rgba(247,242,232,.18); }.flow strong { color:var(--vermilion); font:12px ui-monospace,monospace; }.flow span { font-size:clamp(18px,2vw,28px); line-height:1.5; }
+      .rank { padding:clamp(85px,13vw,180px) 0; }.rank-grid { margin-top:clamp(36px,6vw,72px); display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--ink); }.rank-grid div { min-height:190px; padding:22px 18px; border-right:1px solid var(--line); }.rank-grid div:first-child { padding-left:0; }.rank-grid div:last-child { border:0; }.rank-grid b { display:block; margin-bottom:12px; color:var(--vermilion); font:11px ui-monospace,monospace; }.rank-grid strong { font-family:"Zen Old Mincho","Hiragino Mincho ProN",serif; font-size:clamp(24px,3vw,42px); font-weight:500; }.rank-grid p { font-size:13px; line-height:1.8; }
+      .closing { margin:0 calc(clamp(20px,7vw,112px) * -1); padding:clamp(96px,15vw,240px) clamp(20px,12vw,190px); background:var(--vermilion); color:var(--chalk); }.closing p { margin:0; max-width:860px; font-family:"Zen Old Mincho","Hiragino Mincho ProN",serif; font-size:clamp(42px,8vw,128px); line-height:1; letter-spacing:-.05em; }.closing a { display:inline-block; margin-top:3rem; color:var(--chalk); font:11px ui-monospace,monospace; letter-spacing:.1em; text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:.4em; }
+      @media (max-width:640px) { .scroll-stage { height:520vh; }.hero::after { background:linear-gradient(90deg,rgba(23,21,18,.81),rgba(23,21,18,.25) 72%),linear-gradient(0deg,rgba(23,21,18,.75),transparent 50%); }.title { top:20vh; max-width:58vw; font-size:clamp(58px,17vw,96px); }.hero-note { top:calc(20vh + 155px); width:200px; }.intro,.bout-head { grid-template-columns:1fr; }.fact { grid-template-columns:1fr; gap:12px; }.rank-grid { grid-template-columns:1fr 1fr; }.rank-grid div:nth-child(2) { border-right:0; }.rank-grid div { min-height:140px; border-bottom:1px solid var(--line); }.rank-grid div:first-child { padding-left:18px; }.rank-grid div:last-child { border-bottom:0; } }
+      @media (prefers-reduced-motion:reduce) { html{scroll-behavior:auto}.scroll-stage{height:100svh}.instruction{display:none} }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="scroll-stage" id="stage" aria-label="スクロール連動する相撲映像"><div class="hero">
+        <video id="sumoVideo" preload="auto" muted playsinline aria-label="相撲の映像"><source src="assets/sumo.mp4" type="video/mp4" /></video><div class="grain" aria-hidden="true"></div>
+        <div class="topline"><span><i class="mark">●</i>SUMO / 2026</span></div><button class="sound" id="soundButton" type="button" aria-pressed="false">SOUND OFF</button>
+        <h1 class="title"><span>SUM<em>O</em></span></h1><p class="hero-note">スクロールが、そのまま再生ヘッドになる。下へ進めば立合いへ、上へ戻せば一瞬前へ。</p>
+        <p class="instruction"><b>SCROLL</b> TO MOVE THE MATCH</p><p class="meta"><span id="time">00:00.0</span><br />SCROLL PLAYBACK</p><div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      </div></section>
+      <section class="content" id="about"><div class="intro"><div><p class="eyebrow">01 / THE RING</p><h2>相撲は、<br>円のなかの<br>一瞬です。</h2></div><p>直径4.55メートルの土俵で向き合い、相手を土俵の外へ出すか、足の裏以外を地面につければ勝ち。短い一番の前後には、長い準備と礼がある。力と技、そして間合いを競う格闘技です。</p></div>
+        <div class="facts"><article class="fact"><h3>DOHYO</h3><p>土俵は俵で円形に組まれた勝負の場。中央の仕切り線を挟んで力士が向き合い、円の外へ出ることも敗因になります。</p></article><article class="fact"><h3>RITUAL</h3><p>塩をまくのは土俵を清めるため。四股や柏手にも、心身を整え、場に臨む意味が込められています。</p></article><article class="fact"><h3>STYLE</h3><p>押す、突く、組む、投げる。体格だけでは決まらず、相手の重心を読む技術と、先に仕掛ける判断が勝負を分けます。</p></article></div>
+        <section class="bout"><div class="bout-head"><div><p class="eyebrow">02 / A BOUT</p><h2>一番の流れ</h2></div><p>THE MOMENT BEFORE IMPACT</p></div><ol class="flow"><li><strong>01</strong><span>呼出が力士の名を呼び、土俵へ。互いに礼をして勝負の場所へ入る。</span></li><li><strong>02</strong><span>塩をまき、四股を踏み、仕切りを繰り返す。相手の呼吸とタイミングを測る時間。</span></li><li><strong>03</strong><span>両拳を土につけた瞬間、立合い。そこから勝負が決まるまで、数秒の攻防が続く。</span></li><li><strong>04</strong><span>行司が軍配を上げ、勝負が決する。判定が割れれば物言いとなり、協議が行われることもある。</span></li></ol></section>
+        <section class="rank"><p class="eyebrow">03 / BANZUKE</p><h2>番付は、<br>毎場所の記録。</h2><div class="rank-grid"><div><b>TOP</b><strong>横綱</strong><p>最高位。強さだけでなく、品格と安定した成績が求められる。</p></div><div><b>SANYAKU</b><strong>大関</strong><p>横綱に次ぐ地位。関脇・小結とともに三役と呼ばれる。</p></div><div><b>MAEGASHIRA</b><strong>前頭</strong><p>幕内の番付。上位との対戦を通じて地位を上げていく。</p></div><div><b>SIX TOURNAMENTS</b><strong>年六場所</strong><p>大相撲では年間六つの本場所が行われ、勝ち越しで昇進を目指す。</p></div></div></section>
+        <section class="closing"><p>土俵は動かない。<br>動かすのは、あなた。</p><a href="#stage">↑ SCROLL BACK TO REPLAY</a></section>
+      </section>
+    </main>
+    <script>
+      const stage=document.getElementById('stage'),video=document.getElementById('sumoVideo'),bar=document.getElementById('progressBar'),time=document.getElementById('time'),sound=document.getElementById('soundButton'),reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');let duration=0,ticking=false;
+      const formatTime=s=>`${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toFixed(1).padStart(4,'0')}`;
+      function syncVideo(){ticking=false;if(!duration||reducedMotion.matches)return;const rect=stage.getBoundingClientRect(),range=stage.offsetHeight-window.innerHeight,progress=Math.min(1,Math.max(0,-rect.top/range)),target=progress*Math.max(0,duration-.04);if(Math.abs(video.currentTime-target)>.018)video.currentTime=target;bar.style.width=`${progress*100}%`;time.textContent=formatTime(target)}
+      function requestSync(){if(!ticking){ticking=true;requestAnimationFrame(syncVideo)}} video.addEventListener('loadedmetadata',()=>{duration=video.duration;syncVideo()});window.addEventListener('scroll',requestSync,{passive:true});window.addEventListener('resize',requestSync);
+      sound.addEventListener('click',()=>{video.muted=!video.muted;sound.textContent=video.muted?'SOUND OFF':'SOUND ON';sound.setAttribute('aria-pressed',String(!video.muted))});reducedMotion.addEventListener('change',()=>{if(reducedMotion.matches)video.pause();else requestSync()});if(reducedMotion.matches)video.setAttribute('controls','');else requestSync();
+    </script>
+  </body>
+</html>
